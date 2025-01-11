@@ -29,7 +29,7 @@ Before running this project, ensure you have the following installed:
 1.	Clone the repository:
 
 ```jsx
-git clone https://github.com/your-repo/library-management.git
+git clone https://github.com/Maria-Shakhverdyan/library_project.git
 cd library-management
 ```
 
