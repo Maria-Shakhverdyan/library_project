@@ -7,26 +7,38 @@ from app.database.models.readers import Reader
 from app.database.models.books import Book
 from app.schemas.loans import LoanCreate, LoanGroupByBook, LoanDetail
 
+
 async def get_loans(db: AsyncSession):
-    """Получение всех выдач."""
+    """
+    Retrieve all loans.
+    """
     result = await db.execute(select(Loan))
     return result.scalars().all()
 
+
 async def get_loan_by_id(db: AsyncSession, loan_id: int):
-    """Получение выдачи по ID."""
+    """
+    Retrieve a loan by its ID.
+    """
     result = await db.execute(select(Loan).where(Loan.id == loan_id))
     return result.scalar()
 
+
 async def create_loan(db: AsyncSession, loan: LoanCreate):
-    """Создание новой выдачи."""
+    """
+    Create a new loan.
+    """
     new_loan = Loan(**loan.dict())
     db.add(new_loan)
     await db.commit()
     await db.refresh(new_loan)
     return new_loan
 
+
 async def update_loan(db: AsyncSession, loan_id: int, loan: LoanCreate):
-    """Обновление выдачи по ID."""
+    """
+    Update a loan by its ID.
+    """
     existing_loan = await get_loan_by_id(db, loan_id)
     if not existing_loan:
         return None
@@ -36,8 +48,11 @@ async def update_loan(db: AsyncSession, loan_id: int, loan: LoanCreate):
     await db.refresh(existing_loan)
     return existing_loan
 
+
 async def delete_loan(db: AsyncSession, loan_id: int):
-    """Удаление выдачи по ID."""
+    """
+    Delete a loan by its ID.
+    """
     existing_loan = await get_loan_by_id(db, loan_id)
     if not existing_loan:
         return False
@@ -45,8 +60,11 @@ async def delete_loan(db: AsyncSession, loan_id: int):
     await db.commit()
     return True
 
-#JOIN
+
 async def get_detailed_loans_info(db: AsyncSession):
+    """
+    Retrieve detailed information about loans, including book titles and reader names.
+    """
     result = await db.execute(
         select(
             Loan.id.label("loan_id"),
@@ -61,11 +79,14 @@ async def get_detailed_loans_info(db: AsyncSession):
         for row in result.all()
     ]
 
-#GROUP BY
+
 async def count_active_loans_by_book(db: AsyncSession):
+    """
+    Count active loans grouped by book.
+    """
     result = await db.execute(
         select(Loan.book_id, func.count(Loan.id).label("loan_count"))
-        .where(Loan.return_date == None)
+        .where(Loan.return_date == None)  # Active loans have no return date
         .group_by(Loan.book_id)
     )
     return [
