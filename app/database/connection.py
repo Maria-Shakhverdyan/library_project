@@ -3,36 +3,38 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import text
 from app.config.settings import settings
 
-# Базовый класс для моделей
+# Base class for models
 Base = declarative_base()
 
-# Создаём подключение к PostgreSQL для управления базами данных
+# Connection URL for PostgreSQL database management
 database_admin_url = f"postgresql+asyncpg://{settings.db_user}:{settings.db_password}@{settings.db_host}:{settings.db_port}/postgres"
 engine_admin = create_async_engine(database_admin_url, echo=True, isolation_level="AUTOCOMMIT")
 
-# Создаём подключение к основной базе данных
+# Connection URL for the primary database
 database_url = f"postgresql+asyncpg://{settings.db_user}:{settings.db_password}@{settings.db_host}:{settings.db_port}/{settings.db_name}"
 engine = create_async_engine(database_url, echo=True)
 
-# Сессия для работы с основной базой данных
+# Session for working with the primary database
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-
 async def create_database_if_not_exists():
-    """Создаёт базу данных, если она не существует."""
+    """
+    Create the database if it does not already exist.
+    """
     async with engine_admin.connect() as conn:
-        # Проверяем существование базы данных
+        # Check if the database exists
         result = await conn.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{settings.db_name}'"))
         exists = result.scalar()
         if not exists:
-            # Создаём базу данных
+            # Create the database
             await conn.execute(text(f"CREATE DATABASE {settings.db_name}"))
-            print(f"База данных '{settings.db_name}' успешно создана.")
+            print(f"Database '{settings.db_name}' successfully created.")
         else:
-            print(f"База данных '{settings.db_name}' уже существует.")
-
+            print(f"Database '{settings.db_name}' already exists.")
 
 async def get_db():
-    """Получение сессии для работы с основной базой данных."""
+    """
+    Get a session for working with the primary database.
+    """
     async with async_session() as session:
         yield session
