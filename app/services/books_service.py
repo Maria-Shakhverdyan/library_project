@@ -5,25 +5,36 @@ from app.schemas.books import BookCreate
 
 
 async def get_books(db: AsyncSession):
-    """Получение всех книг."""
+    """
+    Retrieve all books.
+    """
     result = await db.execute(select(Book))
     return result.scalars().all()
 
+
 async def get_book_by_id(db: AsyncSession, book_id: int):
-    """Получение книги по ID."""
+    """
+    Retrieve a book by its ID.
+    """
     result = await db.execute(select(Book).where(Book.id == book_id))
     return result.scalar()
 
+
 async def create_book(db: AsyncSession, book: BookCreate):
-    """Создание новой книги."""
+    """
+    Create a new book.
+    """
     new_book = Book(**book.dict())
     db.add(new_book)
     await db.commit()
     await db.refresh(new_book)
     return new_book
 
+
 async def update_book(db: AsyncSession, book_id: int, book: BookCreate):
-    """Обновление книги по ID."""
+    """
+    Update a book by its ID.
+    """
     existing_book = await get_book_by_id(db, book_id)
     if not existing_book:
         return None
@@ -33,8 +44,11 @@ async def update_book(db: AsyncSession, book_id: int, book: BookCreate):
     await db.refresh(existing_book)
     return existing_book
 
+
 async def delete_book(db: AsyncSession, book_id: int):
-    """Удаление книги по ID."""
+    """
+    Delete a book by its ID.
+    """
     existing_book = await get_book_by_id(db, book_id)
     if not existing_book:
         return False
@@ -42,26 +56,24 @@ async def delete_book(db: AsyncSession, book_id: int):
     await db.commit()
     return True
 
-#SELECT...WHERE
+
 async def filter_books_by_author_and_theme(db: AsyncSession, author: str, theme: str):
     """
-    Фильтрация книг по автору и теме.
+    Filter books by author and theme.
     """
-    # Отладочный вывод
-    print(f"Filtering books by author='{author}', theme='{theme}'")
-
-    # Выполнение запроса
+    print(f"Filtering books by author='{author}', theme='{theme}'")  # Debugging
     result = await db.execute(
         select(Book).where(Book.author == author, Book.theme == theme)
     )
-
-    # Получение результатов
     books = result.scalars().all()
-    print(f"Found books: {books}")
+    print(f"Found books: {books}")  # Debugging
     return books
 
-#Сортировка списка книг по указанному полю
+
 async def get_books_sorted_by_field(db: AsyncSession, sort_by: str):
+    """
+    Sort books by a specific field.
+    """
     valid_sort_fields = ["title", "author", "publisher", "theme"]
     if sort_by not in valid_sort_fields:
         raise ValueError(f"Invalid sort field: {sort_by}")
